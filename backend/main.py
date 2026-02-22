@@ -17,8 +17,13 @@ app.add_middleware(
 )
 
 # Load the model and columns on startup
-model = joblib.load('./model/xgb_strike_optimizer.joblib')
+model = joblib.load('./model/catboost_strike_optimizer.joblib')
 training_columns = joblib.load('./model/training_columns.joblib')
+
+# Define batter info model
+class BatterInfo(BaseModel):
+    name: str
+    sr: float
 
 # Define the expected JSON payload from React
 class MatchScenario(BaseModel):
@@ -28,7 +33,7 @@ class MatchScenario(BaseModel):
     Inning: int
     Venue_Type: str
     Bowler_Group: str
-    available_batters: list[str]
+    available_batters: list[BatterInfo]
 
 def optimize_batting_order(scenario, available_batters, pipeline_model, training_columns):
     """
@@ -36,7 +41,7 @@ def optimize_batting_order(scenario, available_batters, pipeline_model, training
     
     Args:
         scenario (dict): Match context (Over, Cumulative_Wickets, Current_Run_Rate, Inning, Venue_Type, Bowler_Group)
-        available_batters (list): List of batter names to evaluate
+        available_batters (list): List of dicts with 'name' and 'sr' keys
         pipeline_model: Trained ML model for predictions
         training_columns (list): Feature column names from training data
     
@@ -45,20 +50,33 @@ def optimize_batting_order(scenario, available_batters, pipeline_model, training
     """
     simulations = []
 
-    for batter in available_batters:
-        sim_data = scenario.copy()
-        sim_data['Batter'] = batter
+    # Prepare a base dictionary for scenario features, including defaults for missing ones
+    base_scenario = {
+        'Over': None, 'Cumulative_Wickets': None, 'Current_Run_Rate': None,
+        'Inning': None, 'Venue_Type': None, 'Bowler_Group': None,
+        'Batter_Last5_SR': 100.0, # Default if not provided in scenario, otherwise overridden
+        'Batter_vs_BowlerType_SR': 100.0 # Default if not provided in scenario, otherwise overridden
+    }
+    base_scenario.update(scenario) # Override with provided scenario values
+
+    for batter_info in available_batters:
+        # Create a dictionary for this specific batter
+        sim_data = base_scenario.copy()
+        sim_data['Batter'] = batter_info['name']
+        sim_data['Batter_Last5_SR'] = batter_info['sr'] # Use the provided SR
         simulations.append(sim_data)
 
+    # Create DataFrame from simulations
     sim_df = pd.DataFrame(simulations)
-    sim_encoded = pd.get_dummies(sim_df, columns=['Batter', 'Bowler_Group', 'Venue_Type'])
-    sim_encoded = sim_encoded.reindex(columns=training_columns, fill_value=0)
+    # Reorder columns to match training data, and ensure all training columns are present.
+    # Missing columns (like Batter_Last5_SR, Batter_vs_BowlerType_SR if not in scenario) will use defaults from base_scenario.
+    sim_df = sim_df[training_columns]
 
-    # Predict probabilities using the FULL pipeline
-    probs = pipeline_model.predict_proba(sim_encoded)
+    # Predict probabilities using the model
+    probs = pipeline_model.predict_proba(sim_df)
 
     results = []
-    for i, batter in enumerate(available_batters):
+    for i, batter_info in enumerate(available_batters):
         p_pressure = probs[i][0] * 100
         p_rotation = probs[i][1] * 100
         p_boundary = probs[i][2] * 100
@@ -68,7 +86,7 @@ def optimize_batting_order(scenario, available_batters, pipeline_model, training
         tactical_score = (p_boundary * 1.5) + (p_rotation * 1.0) - (p_pressure * 1.0)
 
         results.append({
-            'Batter': batter,
+            'Batter': batter_info['name'],
             'Tactical_Score': round(tactical_score, 2),
             'Boundary_Prob': round(p_boundary, 2),
             'Strike_Rotation': round(p_rotation, 2),
@@ -83,17 +101,15 @@ def optimize_batting_order(scenario, available_batters, pipeline_model, training
 
 @app.post("/api/optimize")
 def optimize_order(scenario: MatchScenario):
-    # Convert Pydantic model to dictionary, separating batters from match context
+    # Convert Pydantic model to dictionaries
     scenario_dict = scenario.model_dump()
-    batters = scenario_dict.pop('available_batters')
+    available_batters = scenario_dict.pop('available_batters')
     
     # Use the optimize_batting_order function
-    results_df = optimize_batting_order(scenario_dict, batters, model, training_columns)
+    results_df = optimize_batting_order(scenario_dict, available_batters, model, training_columns)
     
     # Convert DataFrame to list of dictionaries for JSON response
     results_list = results_df.to_dict('records')
-    
-    # print("Optimization results:", results_list)  # Debugging outputupd
     
     # Format response data to match frontend expectations
     optimized_order = []

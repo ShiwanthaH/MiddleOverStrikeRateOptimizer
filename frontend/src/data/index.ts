@@ -3,6 +3,7 @@ interface Batter {
   common_name: string;
   unique_name: string;
   img_url: string;
+  sr?: number; // Optional strike rate property
 }
 
 const batterData: Batter[] = [
@@ -12,6 +13,7 @@ const batterData: Batter[] = [
     unique_name: "MD Shanaka",
     img_url:
       "https://img1.hscicdn.com/image/upload/f_auto,t_ds_square_w_320,q_50/lsci/db/PICTURES/CMS/328000/328058.2.png",
+    sr: 153.06,
   },
   {
     index: 1,
@@ -19,6 +21,7 @@ const batterData: Batter[] = [
     unique_name: "KIC Asalanka",
     img_url:
       "https://img1.hscicdn.com/image/upload/f_auto,t_ds_square_w_320,q_50/lsci/db/PICTURES/CMS/348500/348599.1.png",
+    sr: 115.625,
   },
   {
     index: 2,
@@ -26,6 +29,7 @@ const batterData: Batter[] = [
     unique_name: "PVD Chameera",
     img_url:
       "https://img1.hscicdn.com/image/upload/f_auto,t_ds_square_w_320,q_50/lsci/db/PICTURES/CMS/319800/319862.2.png",
+    sr: 110.0,
   },
   {
     index: 3,
@@ -33,6 +37,7 @@ const batterData: Batter[] = [
     unique_name: "MADI Hemantha",
     img_url:
       "https://img1.hscicdn.com/image/upload/f_auto,t_ds_square_w_320,q_50/lsci/db/PICTURES/CMS/390700/390714.2.png",
+    sr: 16.66,
   },
   {
     index: 4,
@@ -40,6 +45,7 @@ const batterData: Batter[] = [
     unique_name: "J Liyanage",
     img_url:
       "https://img1.hscicdn.com/image/upload/f_auto,t_ds_square_w_320,q_50/lsci/db/PICTURES/CMS/393400/393461.2.png",
+    sr: 78.4,
   },
   {
     index: 5,
@@ -47,6 +53,7 @@ const batterData: Batter[] = [
     unique_name: "LD Madushanka",
     img_url:
       "https://img1.hscicdn.com/image/upload/f_auto,t_ds_square_w_320,q_50/lsci/db/PICTURES/CMS/348600/348600.1.png",
+    sr: 28.52,
   },
   {
     index: 6,
@@ -54,6 +61,7 @@ const batterData: Batter[] = [
     unique_name: "PHKD Mendis",
     img_url:
       "https://img1.hscicdn.com/image/upload/f_auto,t_ds_square_w_320,q_50/lsci/db/PICTURES/CMS/329900/329938.1.png",
+    sr: 167.92,
   },
   {
     index: 7,
@@ -61,6 +69,7 @@ const batterData: Batter[] = [
     unique_name: "BKG Mendis",
     img_url:
       "https://img1.hscicdn.com/image/upload/f_auto,t_ds_square_w_320,q_50/lsci/db/PICTURES/CMS/319800/319866.2.png",
+    sr: 133.73,
   },
   {
     index: 8,
@@ -68,6 +77,7 @@ const batterData: Batter[] = [
     unique_name: "K Mishara",
     img_url:
       "https://img1.hscicdn.com/image/upload/f_auto,t_h_100_2x/lsci/db/PICTURES/CMS/334700/334794.gif",
+    sr: 125.42,
   },
   {
     index: 9,
@@ -75,6 +85,7 @@ const batterData: Batter[] = [
     unique_name: "P Nissanka",
     img_url:
       "https://img1.hscicdn.com/image/upload/f_auto,t_ds_square_w_320,q_50/lsci/db/PICTURES/CMS/323000/323070.1.png",
+    sr: 161.67,
   },
   {
     index: 10,
@@ -82,6 +93,7 @@ const batterData: Batter[] = [
     unique_name: "MDKJ Perera",
     img_url:
       "https://img1.hscicdn.com/image/upload/f_auto,t_ds_square_w_320,q_50/lsci/db/PICTURES/CMS/329700/329750.1.png",
+    sr: 90.24,
   },
   {
     index: 11,
@@ -89,6 +101,7 @@ const batterData: Batter[] = [
     unique_name: "PM Liyanagamage",
     img_url:
       "https://img1.hscicdn.com/image/upload/f_auto,t_ds_square_w_320,q_50/lsci/db/PICTURES/CMS/355400/355401.1.png",
+    sr: 50.0,
   },
   {
     index: 12,
@@ -96,6 +109,7 @@ const batterData: Batter[] = [
     unique_name: "P Rathnayake",
     img_url:
       "https://img1.hscicdn.com/image/upload/f_auto,t_h_100_2x/lsci/db/PICTURES/CMS/405800/405870.gif",
+    sr: 164.04,
   },
   {
     index: 13,
@@ -103,6 +117,7 @@ const batterData: Batter[] = [
     unique_name: "M Theekshana",
     img_url:
       "https://img1.hscicdn.com/image/upload/f_auto,t_ds_square_w_320,q_50/lsci/db/PICTURES/CMS/347800/347825.1.png",
+    sr: 58.53,
   },
   {
     index: 14,
@@ -110,6 +125,7 @@ const batterData: Batter[] = [
     unique_name: "DN Wellalage",
     img_url:
       "https://img1.hscicdn.com/image/upload/f_auto,t_ds_square_w_320,q_50/lsci/db/PICTURES/CMS/380400/380446.1.png",
+    sr: 78.72,
   },
 ];
 

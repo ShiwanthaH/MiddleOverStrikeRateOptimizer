@@ -1,6 +1,11 @@
 import React, { useState, useMemo } from "react";
 import { venueData, bowlerGroups, batterData } from "../data";
 
+interface BatterSelection {
+  name: string;
+  sr: number;
+}
+
 interface PredictionResult {
   Batter: string;
   Boundary_Prob: number;
@@ -19,10 +24,10 @@ export default function TacticalDashboard() {
     venueData[0].name,
   );
   const [bowlerGroup, setBowlerGroup] = useState<string>(bowlerGroups[1].type);
-  const [selectedBatters, setSelectedBatters] = useState<string[]>([
-    "KIC Asalanka",
-    "MD Shanaka",
-    "BKG Mendis",
+  const [selectedBatters, setSelectedBatters] = useState<BatterSelection[]>([
+    { name: "KIC Asalanka", sr: 120.0 },
+    { name: "MD Shanaka", sr: 115.5 },
+    { name: "BKG Mendis", sr: 105.3 },
   ]);
 
   const [results, setResults] = useState<PredictionResult[]>([]);
@@ -149,10 +154,19 @@ export default function TacticalDashboard() {
 
   // Toggle a batter in/out of the dugout selection
   const toggleBatter = (unique_name: string) => {
-    if (selectedBatters.includes(unique_name)) {
-      setSelectedBatters(selectedBatters.filter((b) => b !== unique_name));
+    const isBatterSelected = selectedBatters.some(
+      (b) => b.name === unique_name,
+    );
+    if (isBatterSelected) {
+      setSelectedBatters(selectedBatters.filter((b) => b.name !== unique_name));
     } else {
-      setSelectedBatters([...selectedBatters, unique_name]);
+      // Find batter data to get strike rate (default to 100.0 if not found)
+      const batterInfo = batterData.find((b) => b.unique_name === unique_name);
+      const strikeRate = batterInfo?.sr || 100.0;
+      setSelectedBatters([
+        ...selectedBatters,
+        { name: unique_name, sr: strikeRate },
+      ]);
     }
   };
 
@@ -363,8 +377,8 @@ export default function TacticalDashboard() {
 
               <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-slate-600">
                 {batterData.map((batter) => {
-                  const isSelected = selectedBatters.includes(
-                    batter.unique_name,
+                  const isSelected = selectedBatters.some(
+                    (b) => b.name === batter.unique_name,
                   );
                   return (
                     <button
