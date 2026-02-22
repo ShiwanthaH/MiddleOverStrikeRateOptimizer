@@ -1,12 +1,12 @@
 # Middle Over Strike Rate Optimizer
 
-A full-stack cricket analytics application that uses machine learning to optimize batting order during middle overs of T20 matches. The system analyzes match scenarios and player statistics to recommend the best batting sequence for maximizing strike rotation while minimizing pressure risk.
+A full-stack cricket analytics application that uses machine learning to optimize batting order during middle overs of T20 matches. The system analyzes match scenarios, player statistics, and recent performance data to recommend the best batting sequence for maximizing strike rotation while minimizing pressure risk.
 
 ## 🎯 Project Overview
 
-**Problem**: In cricket's middle overs (7-15), teams need to balance aggression with stability. Choosing the right batting order is crucial for converting advantage into runs.
+**Problem**: In cricket's middle overs (7-15), teams need to balance aggression with stability. Choosing the right batting order is crucial for converting advantage into runs. Coaches need data-driven insights to make optimal decisions.
 
-**Solution**: This application uses a pre-trained XGBoost model trained on historical T20 data to predict player performance under specific match conditions and rank batters by tactical utility.
+**Solution**: This application uses a pre-trained CatBoost model trained on historical T20 data to predict player performance under specific match conditions. It incorporates batter strike rates and match context to rank batters by tactical utility.
 
 **Use Cases**:
 
@@ -18,39 +18,44 @@ A full-stack cricket analytics application that uses machine learning to optimiz
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    React Frontend                           │
-│          (http://localhost:5173)                            │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │  TacticalDashboard Component                         │   │
-│  │  - Match scenario configuration                      │   │
-│  │  - Results visualization                             │   │
-│  │  - Player recommendation ranking                     │   │
-│  └──────────────────────────────────────────────────────┘   │
+┌────────────────────────────────────────────────────────────┐
+│              React Frontend (Vite)                         │
+│          (http://localhost:5173)                           │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  TacticalDashboard Component                         │  │
+│  │  - Match scenario configuration                      │  │
+│  │  - Batter selection with strike rates                │  │
+│  │  - Results visualization & ranking                   │  │
+│  └──────────────────────────────────────────────────────┘  │
+└─────────────┬─────────────────────────────────────────────┘
+              │ HTTP POST
+              │ JSON: {Over, Wickets, RunRate, Venue,
+              │        BowlerGroup, AvailableBatters[]}
+              ▼
+┌────────────────────────────────────────────────────────────┐
+│             FastAPI Backend (Python)                       │
+│         (http://localhost:8000)                            │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  Data Processing                                     │  │
+│  │  - Match context setup with defaults                 │  │
+│  │  - Batter strike rate integration                    │  │
+│  │  - Feature alignment with training columns           │  │
+│  └──────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  CatBoost Model Inference                            │  │
+│  │  - Predicts 3 outcome probabilities                  │  │
+│  │  - Computes tactical utility score                   │  │
+│  │  - Incorporates recent form data (SR)                │  │
+│  └──────────────────────────────────────────────────────┘  │
 └─────────────┬────────────────────────────────────────────────┘
-              │ HTTP POST (JSON)
-              │ /api/optimize
-              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                   FastAPI Backend                           │
-│              (http://localhost:8000)                        │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │  Feature Engineering & Encoding                      │   │
-│  │  - One-hot encoding for categorical variables        │   │
-│  │  - Column alignment with training data               │   │
-│  └──────────────────────────────────────────────────────┘   │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │  XGBoost Model Inference                             │   │
-│  │  - Predicts 3 outcome probabilities                  │   │
-│  │  - Computes tactical utility score                   │   │
-│  └──────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
               │ JSON Response
+              │ {optimized_order: [{Batter, Probs, Score}]}
               ▼
-        ┌───────────────┐
-        │ Ranked Batters│
-        │ with Scores   │
-        └───────────────┘
+        ┌───────────────────┐
+        │ Ranked Batters    │
+        │ Tactical Scores   │
+        │ Visual Feedback   │
+        └───────────────────┘
 ```
 
 ## 📁 Project Structure
@@ -58,12 +63,12 @@ A full-stack cricket analytics application that uses machine learning to optimiz
 ```
 MiddleOverStrikeRateOptimizer/
 │
-├── backend/                              # FastAPI Server
+├── backend/                              # FastAPI Server (Python)
 │   ├── main.py                           # API endpoints & model inference
 │   ├── requirements.txt                  # Python dependencies
 │   └── model/
-│       ├── xgb_strike_optimizer.joblib  # Trained ML model
-│       └── training_columns.joblib      # Feature columns
+│       ├── catboost_strike_optimizer.joblib  # Trained CatBoost model
+│       └── training_columns.joblib          # Feature column names
 │
 ├── frontend/                             # React Application
 │   ├── src/
@@ -160,10 +165,10 @@ npm run dev
 
 ### Processing Pipeline
 
-1. **Scenario Replication**: Creates one row per available batter with match context
-2. **Feature Encoding**: Applies one-hot encoding to categorical variables
-3. **Column Alignment**: Ensures features match training data structure
-4. **XGBoost Prediction**: Model predicts probabilities for three classes:
+1. **Scenario Setup**: Creates base scenario with match context and defaults
+2. **Batter Integration**: Adds individual batter data (name, strike rate) to each simulation
+3. **Feature Alignment**: Ensures features match training data structure (no manual encoding needed)
+4. **CatBoost Prediction**: Model predicts probabilities for three classes:
    - **Class 0**: Pressure (risky delivery)
    - **Class 1**: Strike Rotation (safe rotate)
    - **Class 2**: Boundary (aggressive shot)
@@ -200,10 +205,11 @@ npm run dev
 
 ### Model Performance
 
-- **Algorithm**: XGBoost Classifier (Gradient Boosting)
+- **Algorithm**: CatBoost Classifier (Gradient Boosting)
 - **Classes**: 3 (Multiclass classification)
-- **Input Features**: ~50 (after one-hot encoding)
+- **Input Features**: Match context + Batter data (no manual encoding needed)
 - **Inference Time**: <100ms per prediction
+- **Handles Categorical Variables**: Native support for categorical features
 
 ### Training Scripts
 
@@ -245,9 +251,9 @@ Located in `Dataset/` directory:
 ### Technologies
 
 - **FastAPI**: High-performance async API
-- **Pydantic**: Data validation
+- **Pydantic**: Data validation and type safety
 - **Uvicorn**: ASGI server
-- **XGBoost**: ML inference
+- **CatBoost**: Gradient Boosting ML inference
 - **Pandas**: Data manipulation
 
 ### Key Endpoints
@@ -388,7 +394,7 @@ Historical T20 Data
         ↓
 Feature Engineering
         ↓
-   XGBoost Training
+   CatBoost Training
         ↓
 Model Serialization
         ↓
@@ -450,7 +456,7 @@ This project is created for cricket analytics and optimization purposes.
 ## 🙏 Acknowledgments
 
 - Training data from ESPN Cricinfo and Cricksheet
-- XGBoost library for ML inference
+- CatBoost library for advanced ML inference
 - FastAPI and React communities
 - Tailwind CSS for beautiful styling
 
