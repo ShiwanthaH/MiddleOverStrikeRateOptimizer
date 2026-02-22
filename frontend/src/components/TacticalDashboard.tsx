@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { venueData, bowlerGroups, batterData } from "../data";
 
 interface BatterSelection {
@@ -216,13 +217,21 @@ export default function TacticalDashboard() {
     <div className="min-h-screen min-w-[100vw] bg-slate-900 text-slate-100 p-6 py-12 font-sans">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <header className="border-b border-slate-700 pb-4">
-          <h1 className="text-3xl font-bold text-blue-400">
-            SLC Tactical Optimizer
-          </h1>
-          <p className="text-slate-400 text-sm mt-1">
-            Middle-Overs Matchup Analysis (Powered by XGBoost)
-          </p>
+        <header className="border-b border-slate-700 pb-4 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-blue-400">
+              SLC Tactical Optimizer
+            </h1>
+            <p className="text-slate-400 text-sm mt-1">
+              Middle-Overs Matchup Analysis (Powered by CatBoost)
+            </p>
+          </div>
+          <Link
+            to="/model-dashboard"
+            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg transition-colors text-sm font-medium"
+          >
+            ML Model Dashboard →
+          </Link>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
